@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: kafka-streams-practice
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        # do not add the __TypeId__ header with the Java class name: the topic carries plain JSON
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: order-processor
+      # only applies when the group has no committed offset yet
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # wraps the real deserializer: invalid JSON does not break poll(), the failure is handed to the error handler
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.value.default.type: com.mricotta.kafkalab.event.OrderEvent
+        spring.json.trusted.packages: com.mricotta.kafkalab.event
+    listener:
+      # the offset is committed when the listener calls ack.acknowledge()
+      ack-mode: manual
+    streams:
+      # identifies the Streams app: it is also its consumer group id and the prefix of its internal topics
+      application-id: order-analytics
+      properties:
+        # skip records that cannot be deserialized instead of stopping the stream thread (the default)
+        default.deserialization.exception.handler: org.apache.kafka.streams.errors.LogAndContinueExceptionHandler
+        # no caching in front of the state stores: every update is emitted downstream right away
+        statestore.cache.max.bytes: 0
