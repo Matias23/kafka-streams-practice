@@ -42,6 +42,7 @@ flowchart LR
 | Kafka Streams | 3.9 | Stream processing: filtering and stateful aggregation |
 | Redis | 7.4 | Deduplication of processed orders, read model for customer totals |
 | Elasticsearch | 8.18 | Search index of orders |
+| Kibana | 8.18 | UI to query and browse the index locally |
 | JUnit 5, Mockito, AssertJ | — | Unit tests |
 | Kafka Streams test utils | 3.9 | In-memory topology tests (`TopologyTestDriver`) |
 | Docker Compose | — | Local Kafka, Redis and Elasticsearch |
@@ -159,6 +160,23 @@ curl 'localhost:8081/orders/search?text=laptop&customerId=c1&minAmount=1000'
 
 Without `text`, results are sorted by `createdAt` descending and `score` is `null`. Invalid parameters return `400 Bad Request`. An order becomes searchable about a second after it is accepted.
 
+### `GET /orders/stats/customers`
+
+Returns the customers with the highest total spend, computed by Elasticsearch with a `terms` aggregation on `customerId` and `sum` and `avg` sub-aggregations on `amount`.
+
+```bash
+curl 'localhost:8081/orders/stats/customers?limit=3'
+```
+
+```json
+[
+  {"customerId":"c2","orderCount":2,"totalAmount":3225.50,"averageAmount":1612.75},
+  {"customerId":"c1","orderCount":2,"totalAmount":2300.00,"averageAmount":1150.00}
+]
+```
+
+`limit` is between 1 and 100 and defaults to `10`.
+
 ### `GET /customers/{customerId}/total`
 
 ```bash
@@ -176,7 +194,7 @@ Returns `404 Not Found` when no order has been aggregated for the customer yet.
 Requirements: JDK 21, Maven, Docker.
 
 ```bash
-docker compose up -d      # Kafka on localhost:9092, Redis on localhost:6379, Elasticsearch on localhost:9200
+docker compose up -d      # Kafka :9092, Redis :6379, Elasticsearch :9200, Kibana :5601
 mvn spring-boot:run       # API on localhost:8081
 ```
 
@@ -203,6 +221,8 @@ docker exec redis-lab redis-cli HGETALL customer-total:c1
 # indexed orders
 curl 'localhost:9200/orders/_search?pretty'
 ```
+
+Kibana is available at http://localhost:5601. Use **Dev Tools** to run queries against the index, or create a data view for `orders` to browse documents in **Discover**.
 
 ## Testing
 

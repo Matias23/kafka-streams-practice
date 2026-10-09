@@ -1,5 +1,6 @@
 package com.mricotta.kafkalab.controller;
 
+import com.mricotta.kafkalab.dto.CustomerOrderStats;
 import com.mricotta.kafkalab.dto.OrderRequest;
 import com.mricotta.kafkalab.dto.OrderSearchCriteria;
 import com.mricotta.kafkalab.dto.OrderSearchResponse;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,5 +49,11 @@ public class OrderController {
             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size) {
         return orderSearchService.search(
                 new OrderSearchCriteria(text, customerId, minAmount, maxAmount, page, size));
+    }
+
+    @GetMapping("/stats/customers")
+    public List<CustomerOrderStats> topCustomers(
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
+        return orderSearchService.topCustomersBySpend(limit);
     }
 }

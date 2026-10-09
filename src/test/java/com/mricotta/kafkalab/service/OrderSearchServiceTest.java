@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.mricotta.kafkalab.dto.CustomerOrderStats;
 import com.mricotta.kafkalab.dto.OrderSearchCriteria;
 import com.mricotta.kafkalab.dto.OrderSearchResult;
 import com.mricotta.kafkalab.entity.OrderDocument;
 import com.mricotta.kafkalab.mapper.OrderDocumentMapper;
 import com.mricotta.kafkalab.repository.OrderQueryRepository;
+import com.mricotta.kafkalab.repository.OrderStatsRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -28,6 +30,9 @@ class OrderSearchServiceTest {
 
     @Mock
     private OrderQueryRepository orderQueryRepository;
+
+    @Mock
+    private OrderStatsRepository orderStatsRepository;
 
     @Mock
     private SearchHits<OrderDocument> searchHits;
@@ -70,6 +75,16 @@ class OrderSearchServiceTest {
         assertThat(response.results()).singleElement()
                 .extracting(OrderSearchResult::score)
                 .isNull();
+    }
+
+    @Test
+    void returnsTopCustomersFromTheStatsRepository() {
+        var stats = List.of(
+                new CustomerOrderStats("c2", 1, new BigDecimal("3200.00"), new BigDecimal("3200.00")),
+                new CustomerOrderStats("c1", 2, new BigDecimal("2300.00"), new BigDecimal("1150.00")));
+        when(orderStatsRepository.findTopCustomersBySpend(2)).thenReturn(stats);
+
+        assertThat(orderSearchService.topCustomersBySpend(2)).isEqualTo(stats);
     }
 
     @SuppressWarnings("unchecked")
