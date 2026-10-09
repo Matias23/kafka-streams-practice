@@ -12,6 +12,7 @@ public class KafkaTopicConfig {
     public static final String ORDERS_DLT = "orders-dlt";
     public static final String ORDERS_HIGH_VALUE = "orders-high-value";
     public static final String CUSTOMER_TOTALS = "customer-totals";
+    public static final String CUSTOMER_TOTALS_DLT = "customer-totals-dlt";
 
     @Bean
     public NewTopic ordersTopic() {
@@ -33,5 +34,10 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic customerTotalsTopic() {
         return TopicBuilder.name(CUSTOMER_TOTALS).partitions(3).replicas(1).compact().build();
+    }
+
+    @Bean
+    public NewTopic customerTotalsDltTopic() {
+        return TopicBuilder.name(CUSTOMER_TOTALS_DLT).partitions(3).replicas(1).build();
     }
 }
