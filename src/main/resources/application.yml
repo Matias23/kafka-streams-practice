@@ -4,10 +4,15 @@ server:
 spring:
   application:
     name: kafka-streams-practice
+  elasticsearch:
+    uris: http://localhost:9200
   data:
     redis:
       host: localhost
       port: 6379
+      # Redis is accessed through StringRedisTemplate, not through Spring Data repositories
+      repositories:
+        enabled: false
   kafka:
     bootstrap-servers: localhost:9092
     producer:
